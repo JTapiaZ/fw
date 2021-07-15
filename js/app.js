@@ -81,60 +81,100 @@ $('.owl-carousel').owlCarousel({
 });
 
 // Contact Form
-function validateForm() {
-    var name = document.forms["myForm"]["name"].value;
-    var email = document.forms["myForm"]["email"].value;
-    var subject = document.forms["myForm"]["subject"].value;
-    var comments = document.forms["myForm"]["comments"].value;
-    document.getElementById("error-msg").style.opacity = 0;
-    document.getElementById('error-msg').innerHTML = "";
-    if (name == "" || name == null) {
-        document.getElementById('error-msg').innerHTML = "<div class='alert alert-warning error_message'>*Please enter a Name*</div>";
-        fadeIn();
-        return false;
+async function validateForm() {
+    var name = document.getElementById("name").value;
+    var email = document.getElementById("email").value;
+    var subject = document.getElementById("subject").value;
+    var comments = document.getElementById("comments").value;
+    var regex = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+
+    if (name.length < 8) {
+        Swal.fire({
+            icon: 'error',
+            title: '¡Error!',
+            text: "¡Debes ingresar tu nombre completo!",
+            confirmButtonColor: '#106fde',
+            timer: 10500
+        })
+        return (false);
+    } else if (regex.test(email) == false) {
+        Swal.fire({
+            icon: 'error',
+            title: '¡Error!',
+            text: "¡Debes ingresar una direccion de correo electronico valida!",
+            confirmButtonColor: '#106fde',
+            timer: 10500
+        })
+        return (false);
+    } else if (subject.length < 6) {
+        Swal.fire({
+            icon: 'error',
+            title: '¡Error!',
+            text: "¡Debes ingresar un numero de celular valido!",
+            confirmButtonColor: '#106fde',
+            timer: 10500
+        })
+        return (false);
+    } else if (comments.length < 7) {
+        Swal.fire({
+            icon: 'error',
+            title: '¡Error!',
+            text: "¡Debes ingresar una descripcion de tu solicitud!",
+            confirmButtonColor: '#106fde',
+            timer: 10500
+        })
+        return (false);
+    } else {
+        await fetch('https://backfw.herokuapp.com/api/sendEmail', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name,
+                email,
+                subject,
+                comments,
+            })
+        })
+        .then(function (result) {
+            if (result['ok'] === true) {
+                result.text().then(function (data) {
+                    Swal.fire({
+                        title:'¡Bien!',
+                        text:"Gracias por registrarse, pronto nos pondremos en contacto con usted.",
+                        icon:'success'
+                    })
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 4000);
+                })
+            } else {
+                result.text().then(function (data) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡ERROR!',
+                        text: data,
+                        timer: 10500
+                    })
+                })
+            }
+
+        })
+        .catch(function (error) {
+            console.log(error)
+            Swal.fire({
+                icon: 'error',
+                title: '¡ERROR!',
+                text: data,
+                timer: 10500
+            })
+        })
+        } 
+        
     }
-    if (email == "" || email == null) {
-        document.getElementById('error-msg').innerHTML = "<div class='alert alert-warning error_message'>*Please enter a Email*</div>";
-        fadeIn();
-        return false;
-    }
-    if (subject == "" || subject == null) {
-        document.getElementById('error-msg').innerHTML = "<div class='alert alert-warning error_message'>*Please enter a Subject*</div>";
-        fadeIn();
-        return false;
-    }
-    if (comments == "" || comments == null) {
-        document.getElementById('error-msg').innerHTML = "<div class='alert alert-warning error_message'>*Please enter a Comments*</div>";
-        fadeIn();
-        return false;
-    }
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function () {
-        if (this.readyState == 4 && this.status == 200) {
-            document.getElementById("simple-msg").innerHTML = this.responseText;
-            document.forms["myForm"]["name"].value = "";
-            document.forms["myForm"]["email"].value = "";
-            document.forms["myForm"]["subject"].value = "";
-            document.forms["myForm"]["comments"].value = "";
-        }
-    };
-    xhttp.open("POST", "php/contact.php", true);
-    xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    xhttp.send("name=" + name + "&email=" + email + "&subject=" + subject + "&comments=" + comments);
-    return false;
-}
-function fadeIn() {
-    var fade = document.getElementById("error-msg");
-    var opacity = 0;
-    var intervalID = setInterval(function () {
-        if (opacity < 1) {
-            opacity = opacity + 0.5
-            fade.style.opacity = opacity;
-        } else {
-            clearInterval(intervalID);
-        }
-    }, 200);
-}
+
 
 
 
